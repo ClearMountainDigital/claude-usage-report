@@ -88,6 +88,24 @@ No pip packages, no `jq`, no Node.
 | `--no-open` | off | Don't launch the browser after writing |
 | `--claude-dir PATH` | `~/.claude/projects` | Non-standard Claude Code data location |
 
+## Palette
+
+**Palette — [MountainLabs.ai](https://mountainlabs.ai)**
+
+The report uses the MountainLabs brand system: forest, stone, and slate identity hues on a warm base, with **amber** as the spend accent. Model series colors are assigned in cost order, darkened on the light theme and brightened on the dark theme so both stay legible (the same swatches the [MountainLabs statusline](https://github.com/ClearMountainDigital/mountainlabs-statusline) uses).
+
+| Role | Light | Dark |
+|---|---|---|
+| Background | `#F2EEE4` stone paper | `#26140A` base |
+| Ink | `#26140A` | `#F2F2F2` |
+| Spend accent · amber | `#8C6A25` | `#D0AA68` |
+| Series · forest / sage | `#3F5147` | `#96C8A5` |
+| Series · slate / sky | `#495B6C` | `#96B4CD` |
+| Series · rust | `#A4561F` | `#E28A4A` |
+| Series · amber | `#8C6A25` | `#D0AA68` |
+| Series · red | `#9C423C` | `#EE6C64` |
+| Series · stone | `#716A56` | `#A89E88` |
+
 ## Updating prices
 
 Rates change. They live in one dict at the top of [`claude_usage.py`](claude_usage.py), in dollars per 1M tokens, with the last-checked date in the comment:
