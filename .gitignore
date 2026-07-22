@@ -1,0 +1,7 @@
+# generated reports
+claude-usage-report.html
+*.html
+
+# python
+__pycache__/
+*.pyc
