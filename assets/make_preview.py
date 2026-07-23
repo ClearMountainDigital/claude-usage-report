@@ -102,7 +102,7 @@ def main():
         out = os.path.join(HERE, name)
         subprocess.run(
             [CHROME, "--headless", "--disable-gpu", "--force-device-scale-factor=2",
-             "--window-size=1120,1210", "--screenshot=" + out, "file://" + demo],
+             "--window-size=1120,1400", "--screenshot=" + out, "file://" + demo],
             check=True, capture_output=True)
         print("wrote", out)
 

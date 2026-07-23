@@ -257,75 +257,106 @@ TEMPLATE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Estimated Claude Code token usage and spend — by day, model, and project — computed locally from your session logs. A zero-dependency dashboard by MountainLabs.ai.">
 <title>Claude Code — Token &amp; Cost Report</title>
 <style>
 /* MountainLabs.ai palette — forest/stone/slate identity hues, warm #26140A base,
    amber spend accent; sage->rust->red reserved for semantic use. */
 :root{
-  --paper:#f2eee4;--panel:#fbf9f4;--ink:#26140a;--muted:#5d564a;--faint:#8a8172;
-  --line:#e2dbc9;--line2:#ece6d7;--accent:#8c6a25;--accent-soft:#f0e4c8;
+  --paper:#f2eee4;--panel:#fbf9f4;--ink:#26140a;--muted:#5d564a;--faint:#726b5a;
+  --line:#e2dbc9;--line2:#ece6d7;--accent:#866320;--accent-soft:#f0e4c8;
   --shadow:0 1px 2px rgba(38,20,10,.06),0 1px 3px rgba(38,20,10,.05);
 __CSSVARS_LIGHT__
 }
 @media (prefers-color-scheme:dark){:root{
-  --paper:#26140a;--panel:#301d0e;--ink:#f2f2f2;--muted:#c2b49b;--faint:#8f8168;
+  --paper:#26140a;--panel:#301d0e;--ink:#f2f2f2;--muted:#c2b49b;--faint:#9a8c72;
   --line:#43301c;--line2:#382817;--accent:#d0aa68;--accent-soft:#3a2a12;
   --shadow:0 1px 3px rgba(0,0,0,.45);
 __CSSVARS_DARK__
 }}
+/* Manual theme override (zero-JS, CSS :has). Auto follows the OS; Light/Dark force it. */
+html:has(#t-light:checked){
+  --paper:#f2eee4;--panel:#fbf9f4;--ink:#26140a;--muted:#5d564a;--faint:#726b5a;
+  --line:#e2dbc9;--line2:#ece6d7;--accent:#866320;--accent-soft:#f0e4c8;
+  --shadow:0 1px 2px rgba(38,20,10,.06),0 1px 3px rgba(38,20,10,.05);
+__CSSVARS_LIGHT__
+}
+html:has(#t-dark:checked){
+  --paper:#26140a;--panel:#301d0e;--ink:#f2f2f2;--muted:#c2b49b;--faint:#9a8c72;
+  --line:#43301c;--line2:#382817;--accent:#d0aa68;--accent-soft:#3a2a12;
+  --shadow:0 1px 3px rgba(0,0,0,.45);
+__CSSVARS_DARK__
+}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1060px;margin:0 auto;padding:32px 24px 64px}
-.eyebrow{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;
-  border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:8px}
-h1{font-size:23px;margin:6px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 24px 72px}
+.eyebrow{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:26px}
+h1{font-size:31px;margin:9px 0 0;letter-spacing:-.02em;line-height:1.1;text-wrap:balance;font-weight:700}
+.lede{margin:11px 0 0;max-width:560px;color:var(--muted);font-size:14.5px;line-height:1.55}
 .rangebox{text-align:right;font-size:12.5px;color:var(--muted)}
 .rangebox .r{font-family:ui-monospace,Menlo,monospace;color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
-.note{font-size:12px;color:var(--muted);background:var(--accent-soft);border:1px solid var(--line);
-  border-radius:8px;padding:9px 13px;margin:18px 0 26px;display:flex;gap:8px;align-items:baseline}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:13px}
+.themebar{position:relative;display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+.themebar label{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.03em;padding:5px 11px;cursor:pointer;color:var(--muted);user-select:none;border-left:1px solid var(--line2)}
+.themebar label:first-of-type{border-left:0}
+.themebar label:hover{color:var(--ink)}
+.themebar .vh:checked + label{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.themebar .vh:focus-visible + label{outline:2px solid var(--accent);outline-offset:-2px}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.note{font-size:12.5px;color:var(--muted);background:var(--accent-soft);border:1px solid var(--line);
+  border-radius:10px;padding:12px 15px;margin:0 0 32px;display:flex;gap:10px;align-items:baseline}
 .note b{color:var(--ink)}
-.note code{font-family:ui-monospace,Menlo,monospace;font-size:11px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:15px 16px;box-shadow:var(--shadow)}
-.kpi .lbl{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-.kpi .val{font-family:ui-monospace,Menlo,monospace;font-size:27px;font-weight:600;letter-spacing:-.02em;margin-top:7px;font-variant-numeric:tabular-nums}
-.kpi .val.sm{font-size:15px;line-height:1.35}
-.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.note code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin:46px 0 16px}
+.section-head .st{max-width:640px}
+.section-head h2{font-size:19px;margin:7px 0 0;letter-spacing:-.01em;font-weight:700;color:var(--ink)}
+.section-head .desc{margin:6px 0 0;font-size:13.5px;color:var(--muted);line-height:1.5}
+.section-head .meta{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:6px}
+.kpi{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:18px 20px 20px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(38,20,10,.10)}
+.kpi .lbl{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.kpi .val{font-family:ui-monospace,Menlo,monospace;font-size:29px;font-weight:600;letter-spacing:-.02em;margin-top:10px;font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .val.sm{font-size:16px;line-height:1.3;margin-top:12px}
+.kpi .sub{font-size:11.5px;color:var(--muted);margin-top:8px}
+.kpi.accent{background:linear-gradient(160deg,var(--accent-soft),var(--panel) 60%);border-color:color-mix(in srgb,var(--accent) 32%,var(--line))}
 .kpi.accent .val{color:var(--accent)}
-.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin:14px 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:17px 18px;box-shadow:var(--shadow)}
-.card h2{font-size:12px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);margin:0 0 16px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin:18px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;letter-spacing:-.01em;color:var(--ink);margin:0;font-weight:700}
+.card .card-sub{margin:4px 0 18px;font-size:12.5px;color:var(--muted)}
 .chart{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:6px}
 .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
 .bar .col{width:100%;max-width:34px;background:linear-gradient(var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));
   border-radius:4px 4px 0 0;min-height:2px}
 .bar .cost{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .bar .day{font-family:ui-monospace,Menlo,monospace;font-size:9.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
-.mgroup{margin-bottom:13px}
+.mgroup{margin-bottom:14px}
+.mgroup:last-child{margin-bottom:0}
 .mrow{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center}
 .dot{width:11px;height:11px;border-radius:3px;flex:none}
 .mname{font-size:13px}
 .mname .t{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--faint)}
-.mbar{height:6px;border-radius:3px;background:var(--line2);margin-top:5px;overflow:hidden}
+.mbar{height:6px;border-radius:3px;background:var(--line2);margin-top:6px;overflow:hidden}
 .mbar span{display:block;height:100%;border-radius:3px}
 .mcost{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .mcost .p{font-size:10.5px;color:var(--faint);font-weight:400}
-.projhead{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 12px}
-.projhead h2{font-size:12px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0}
-.ptable{display:flex;flex-direction:column;gap:9px}
-.prow{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 16px;box-shadow:var(--shadow)}
+.ptable{display:flex;flex-direction:column;gap:10px}
+.prow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);transition:border-color .16s,transform .16s,box-shadow .16s}
+.prow:hover{border-color:color-mix(in srgb,var(--accent) 32%,var(--line));transform:translateY(-1px);box-shadow:0 6px 18px rgba(38,20,10,.08)}
 .pmain{display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;cursor:pointer;list-style:none}
 .pmain::-webkit-details-marker{display:none}
-.pname{font-size:14px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pname .arw{color:var(--faint);font-size:10px;margin-right:7px;display:inline-block;transition:transform .18s}
+.pname{font-size:14.5px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pname .arw{color:var(--faint);font-size:10px;margin-right:9px;display:inline-block;transition:transform .18s}
 .prow[open] .arw{transform:rotate(90deg)}
 .ptok{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 .pcost{font-family:ui-monospace,Menlo,monospace;font-size:16px;font-weight:600;text-align:right;min-width:82px;font-variant-numeric:tabular-nums}
-.compbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:11px;background:var(--line2)}
+.compbar{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:12px;background:var(--line2)}
 .compbar span{height:100%}
 .detail-in{padding-top:14px;margin-top:13px;border-top:1px solid var(--line2)}
 .mline{display:grid;grid-template-columns:16px 150px 1fr 74px;gap:11px;align-items:center;font-size:12px;margin-bottom:9px}
@@ -334,17 +365,18 @@ h1{font-size:23px;margin:6px 0 0;letter-spacing:-.01em;text-wrap:balance}
 .mline .c{font-family:ui-monospace,Menlo,monospace;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .stack{display:flex;height:9px;border-radius:3px;overflow:hidden;background:var(--line2)}
 .stack span{height:100%}
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
 .legend .li{display:flex;align-items:center;gap:6px}
 .legend .sw{width:10px;height:10px;border-radius:2px;background:var(--faint)}
-footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-footer h3{font-size:11px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
+footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+footer h3{font-size:11px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 12px}
 .rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 20px;margin:10px 0}
 .rates div{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
 .rates .rn{color:var(--ink)}
-.disc{margin-top:14px;line-height:1.6}
+.disc{margin-top:16px;line-height:1.6}
 @media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}
-  .mline{grid-template-columns:16px 1fr 60px}.mline .stack{display:none}.chart{gap:3px}}
+  .mline{grid-template-columns:16px 1fr 60px}.mline .stack{display:none}.chart{gap:3px}
+  h1{font-size:26px}.section-head{margin:34px 0 14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -354,13 +386,25 @@ footer h3{font-size:11px;font-family:ui-monospace,Menlo,monospace;letter-spacing
     <div>
       <div class="eyebrow">MountainLabs.ai · Claude Code Telemetry</div>
       <h1>Token &amp; Cost Report</h1>
+      <p class="lede">Estimated spend from the Claude Code session logs on your machine — broken down by day, model, and project.</p>
     </div>
-    <div class="rangebox">
-      <div class="r">__RANGE__</div>
-      <div>trailing __DAYSN__ days · __NRESP__ model responses</div>
+    <div class="hright">
+      <div class="themebar" role="group" aria-label="Color theme">
+        <input class="vh" type="radio" name="theme" id="t-auto" checked>
+        <label for="t-auto">Auto</label>
+        <input class="vh" type="radio" name="theme" id="t-light">
+        <label for="t-light">Light</label>
+        <input class="vh" type="radio" name="theme" id="t-dark">
+        <label for="t-dark">Dark</label>
+      </div>
+      <div class="rangebox">
+        <div class="r">__RANGE__</div>
+        <div>trailing __DAYSN__ days · __NRESP__ model responses</div>
+      </div>
     </div>
   </header>
 
+  <main>
   <div class="note"><span>&#9888;&#65038;</span><span><b>Estimate from local session logs</b>, not official Anthropic billing. Costs apply published per-model rates to the token counts in <code>~/.claude/projects</code>. Cache reads billed at 0.1&times; input, cache writes at 1.25&times; (5-min TTL). Official figures: console.anthropic.com.</span></div>
 
   <div class="kpis">
@@ -371,17 +415,25 @@ footer h3{font-size:11px;font-family:ui-monospace,Menlo,monospace;letter-spacing
   </div>
 
   <div class="grid2">
-    <div class="card"><h2>Estimated cost by day</h2><div class="chart">__CHART__</div></div>
-    <div class="card"><h2>Cost by model</h2><div>__MODELS__</div></div>
+    <div class="card"><h2>Estimated cost by day</h2><p class="card-sub">Daily spend across the window — the tallest bar is your peak day.</p><div class="chart">__CHART__</div></div>
+    <div class="card"><h2>Cost by model</h2><p class="card-sub">Share of total spend, per model.</p><div>__MODELS__</div></div>
   </div>
 
-  <div class="projhead"><h2>Cost by project</h2><div class="eyebrow">click a row for the model breakdown</div></div>
+  <div class="section-head">
+    <div class="st">
+      <div class="eyebrow">Breakdown</div>
+      <h2>Cost by project</h2>
+      <p class="desc">Ranked by estimated cost. Expand any row for its per-model token split.</p>
+    </div>
+    <div class="meta">click a row to expand</div>
+  </div>
   <div class="ptable">__PROJECTS__</div>
+  </main>
 
   <footer>
     <h3>Methodology &amp; rates ($ / 1M tokens)</h3>
     <div class="rates">__RATES__</div>
-    <div class="disc">Token counts are de-duplicated by message ID across all local session transcripts. Cache-read tokens (context re-fed cheaply each turn) usually dominate raw token volume but are the least expensive component. Models not in the rate table fall back to Opus-tier pricing. Generated by claude-usage-report · <a href="https://mountainlabs.ai" style="color:var(--accent);text-decoration:none">MountainLabs.ai</a>.</div>
+    <div class="disc">Token counts are de-duplicated by message ID across all local session transcripts. Cache-read tokens (context re-fed cheaply each turn) usually dominate raw token volume but are the least expensive component. Models not in the rate table fall back to Opus-tier pricing. Generated by claude-usage-report · <a href="https://mountainlabs.ai" style="color:var(--accent);text-decoration:underline">MountainLabs.ai</a>.</div>
   </footer>
 </div>
 </body>
