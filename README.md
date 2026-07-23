@@ -34,7 +34,9 @@ One script, no dependencies, no network calls. Nothing leaves your machine.
 - **Cost by model** — every model that ran, with token volume, dollar share, and share bars
 - **Cost by project** — ranked rows; click any row to expand a per-model breakdown with a stacked bar of where the tokens went (output / input / cache write / cache read)
 - **Honest methodology** — the rate table and cache multipliers used are printed in the report footer, and the page is labeled as an estimate, not a bill
-- **Renders anywhere, forever** — the report is fully static HTML (zero JavaScript, native `<details>` expanders), with light and dark themes following your OS
+- **Auto / Light / Dark** — a theme switch in the header that defaults to your OS, built in pure CSS (`:has()` + hidden radios) so it stays zero-JavaScript
+- **Accessible** — semantic landmarks and WCAG AA contrast in both themes; scores 100 on Lighthouse accessibility
+- **Renders anywhere, forever** — the report is fully static HTML (zero JavaScript, native `<details>` expanders) with inline CSS and no external assets
 
 > [!NOTE]
 > Everything is computed from the JSONL transcripts Claude Code already writes — no daemon, no API calls, no telemetry. Responses are de-duplicated by message ID, so streamed and retried events aren't double-counted.
@@ -98,7 +100,7 @@ The report uses the MountainLabs brand system: forest, stone, and slate identity
 |---|---|---|
 | Background | `#F2EEE4` stone paper | `#26140A` base |
 | Ink | `#26140A` | `#F2F2F2` |
-| Spend accent · amber | `#8C6A25` | `#D0AA68` |
+| Spend accent · amber | `#866320` | `#D0AA68` |
 | Series · forest / sage | `#3F5147` | `#96C8A5` |
 | Series · slate / sky | `#495B6C` | `#96B4CD` |
 | Series · rust | `#A4561F` | `#E28A4A` |
@@ -139,7 +141,7 @@ Cache writes bill at 1.25× input (the 5-minute-TTL rate Claude Code uses); cach
 
 Claude Code appends a JSON line per event to `~/.claude/projects/<project>/<session>.jsonl`. Each assistant message carries a `usage` object with `input_tokens`, `output_tokens`, `cache_creation_input_tokens`, and `cache_read_input_tokens`. The script walks every transcript, keeps events inside the window, de-duplicates by `(message id, output tokens)` so streamed chunks and retries count once, buckets by local calendar day, and multiplies by the rate table. Project folder names are made readable by stripping your home directory and whatever path prefix all your projects share.
 
-The report is generated as plain HTML with inline CSS — no JavaScript, no external assets — so it renders identically in any browser, email, or archive, and can't break when a CDN or script policy changes.
+The report is generated as plain HTML with inline CSS — no JavaScript, no external assets — so it renders identically in any browser, email, or archive, and can't break when a CDN or script policy changes. Even the Auto / Light / Dark theme switch is pure CSS (hidden radio inputs plus the `:has()` selector), so theming needs no script either.
 
 The preview images above are generated from **sample data** by [`assets/make_preview.py`](assets/make_preview.py); your report will show your own projects.
 
